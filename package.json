@@ -1,0 +1,7 @@
+{
+    "name": "player-extensions",
+    "files": {
+        "lua/packages/player-extensions/package.lua": "https://raw.githubusercontent.com/Pika-Software/player-extensions/main/lua/packages/player-extensions/package.lua",
+        "lua/packages/player-extensions/init.lua": "https://raw.githubusercontent.com/Pika-Software/player-extensions/main/lua/packages/player-extensions/init.lua"
+    }
+}
