@@ -29,7 +29,7 @@ if CLIENT then
             ply:SetMoveType( moveType )
         end,
         ["move-collide-type"] = function( ply, moveCollideType )
-            plySetMoveCollide( moveCollideType )
+            ply:SetMoveCollide( moveCollideType )
         end
     }
 
@@ -56,17 +56,42 @@ if CLIENT then
 
             local ply = self:GetIdentifier()
             if not IsValid( ply ) then return end
-            print( ply, key, value )
             func( ply, value )
         end )
     end )
 
 end
 
+local PLAYER = FindMetaTable( "Player" )
+
+-- Nickname
+PLAYER.SourceNick = PLAYER.SourceNick or PLAYER.Nick
+
+function PLAYER:Nick()
+    local realName = PLAYER.SourceNick( self )
+
+    local sync = playerData:GetSync( self )
+    if sync then return sync:Get( "name", realName ) end
+
+    return realName
+end
+
+PLAYER.GetName = PLAYER.Nick
+PLAYER.Name = PLAYER.Nick
+
 if SERVER then
 
-    local PLAYER = FindMetaTable( "Player" )
     local ENTITY = FindMetaTable( "Entity" )
+
+    -- Nickname
+    function PLAYER:SetNick( name )
+        ArgAssert( name, 1, "string" )
+        local sync = playerData:CreateSync( self )
+        sync:Set( "name", name )
+    end
+
+    -- Map Name
+    PLAYER.GetMapName = ENTITY.GetName
 
     -- Player Model
     do
@@ -104,14 +129,14 @@ if SERVER then
 
     -- Player Move
     function PLAYER:SetMoveType( moveType )
-        local sync = playerData:GetSync( self )
+        local sync = playerData:CreateSync( self )
         if not sync then return end
         sync:Set( "move-type", moveType )
         ENTITY.SetMoveType( self, moveType )
     end
 
     function PLAYER:SetMoveCollide( moveCollideType )
-        local sync = playerData:GetSync( self )
+        local sync = playerData:CreateSync( self )
         if not sync then return end
         sync:Set( "move-collide-type", moveCollideType )
         ENTITY.SetMoveCollide( self, moveCollideType )
@@ -128,7 +153,7 @@ if SERVER then
         PLAYER.__SetHullDuck( self, mins, maxs )
         if onlyServer then return end
 
-        local sync = playerData:GetSync( self )
+        local sync = playerData:CreateSync( self )
         if not sync then return end
 
         sync:Set( "duck-hull-mins", mins )
@@ -142,7 +167,7 @@ if SERVER then
         PLAYER.__SetHull( self, mins, maxs )
         if onlyServer then return end
 
-        local sync = playerData:GetSync( self )
+        local sync = playerData:CreateSync( self )
         if not sync then return end
 
         sync:Set( "hull-mins", mins )
