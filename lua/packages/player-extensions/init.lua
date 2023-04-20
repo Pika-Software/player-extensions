@@ -1,16 +1,15 @@
 import( file.Exists( "packages/glua-extensions/package.lua", gpm.LuaRealm ) and "packages/glua-extensions" or "https://raw.githubusercontent.com/Pika-Software/glua-extensions/main/package.json" )
-import( file.Exists( "packages/net-messager/package.lua", gpm.LuaRealm ) and "packages/net-messager" or "https://raw.githubusercontent.com/Pika-Software/net-messager/main/package.json" )
+import( "packages/nw3-vars" )
 
 local packageName = gpm.Package:GetIdentifier()
 local ArgAssert = ArgAssert
 local IsValid = IsValid
 local hook = hook
 
-local playerData = net.Messager( "source-player" )
-
 if CLIENT then
 
-    gameevent.Listen( "player_info" )
+    local Player = Player
+    local select = select
 
     local actions = {
         ["duck-hull-mins"] = function( ply, mins )
@@ -33,31 +32,25 @@ if CLIENT then
         end
     }
 
+    local function init( ply )
+        ply:SetNW3VarProxy( function( self, key, value )
+            local func = actions[ key ]
+            if not func then return end
+
+            local ply = self:GetIdentifier()
+            if not IsValid( ply ) then return end
+            func( ply, value )
+        end )
+    end
+
+    hook.Add( "PlayerInitialized", packageName, init )
+
+    gameevent.Listen( "player_info" )
+
     hook.Add( "player_info", packageName, function( data )
         local ply = Player( data.userid )
         if not IsValid( ply ) then return end
-
-        local sync = playerData:CreateSync( ply )
-        sync:AddCallback( function( self, key, value )
-            local func = actions[ key ]
-            if not func then return end
-
-            local ply = self:GetIdentifier()
-            if not IsValid( ply ) then return end
-            func( ply, value )
-        end )
-    end )
-
-    hook.Add( "PlayerInitialized", packageName, function( ply )
-        local sync = playerData:CreateSync( ply )
-        sync:AddCallback( function( self, key, value )
-            local func = actions[ key ]
-            if not func then return end
-
-            local ply = self:GetIdentifier()
-            if not IsValid( ply ) then return end
-            func( ply, value )
-        end )
+        init( ply )
     end )
 
 end
@@ -68,12 +61,7 @@ local PLAYER = FindMetaTable( "Player" )
 PLAYER.SourceNick = PLAYER.SourceNick or PLAYER.Nick
 
 function PLAYER:Nick()
-    local realName = PLAYER.SourceNick( self )
-
-    local sync = playerData:GetSync( self )
-    if sync then return sync:Get( "name", realName ) end
-
-    return realName
+    return self:GetNW3Var( "name", PLAYER.SourceNick( self ) )
 end
 
 PLAYER.GetName = PLAYER.Nick
@@ -86,8 +74,7 @@ if SERVER then
     -- Nickname
     function PLAYER:SetNick( name )
         ArgAssert( name, 1, "string" )
-        local sync = playerData:CreateSync( self )
-        sync:Set( "name", name )
+        self:SetNW3Var( "name", name )
     end
 
     -- Map Name
@@ -116,29 +103,14 @@ if SERVER then
 
     end
 
-    hook.Add( "PlayerInitialized", packageName, function( ply )
-        playerData:CreateSync( ply )
-        playerData:Sync( ply )
-    end )
-
-    hook.Add( "PlayerDisconnected", packageName, function( ply )
-        local sync = playerData:GetSync( ply )
-        if not sync then return end
-        sync:Destroy()
-    end )
-
     -- Player Move
     function PLAYER:SetMoveType( moveType )
-        local sync = playerData:CreateSync( self )
-        if not sync then return end
-        sync:Set( "move-type", moveType )
+        self:SetNW3Var( "move-type", moveType )
         ENTITY.SetMoveType( self, moveType )
     end
 
     function PLAYER:SetMoveCollide( moveCollideType )
-        local sync = playerData:CreateSync( self )
-        if not sync then return end
-        sync:Set( "move-collide-type", moveCollideType )
+        self:SetNW3Var( "move-collide-type", moveCollideType )
         ENTITY.SetMoveCollide( self, moveCollideType )
     end
 
@@ -153,11 +125,8 @@ if SERVER then
         PLAYER.__SetHullDuck( self, mins, maxs )
         if onlyServer then return end
 
-        local sync = playerData:CreateSync( self )
-        if not sync then return end
-
-        sync:Set( "duck-hull-mins", mins )
-        sync:Set( "duck-hull-maxs", maxs )
+        self:SetNW3Var( "duck-hull-mins", mins )
+        self:SetNW3Var( "duck-hull-maxs", maxs )
     end
 
     function PLAYER:SetHull( mins, maxs, onlyServer )
@@ -167,11 +136,8 @@ if SERVER then
         PLAYER.__SetHull( self, mins, maxs )
         if onlyServer then return end
 
-        local sync = playerData:CreateSync( self )
-        if not sync then return end
-
-        sync:Set( "hull-mins", mins )
-        sync:Set( "hull-maxs", maxs )
+        self:SetNW3Var( "hull-mins", mins )
+        self:SetNW3Var( "hull-maxs", maxs )
     end
 
 end
