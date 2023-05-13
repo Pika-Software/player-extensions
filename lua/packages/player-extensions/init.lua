@@ -1,5 +1,5 @@
-import( gpm.LuaPackageExists( "packages/glua-extensions" ) and "packages/glua-extensions" or "https://github.com/Pika-Software/glua-extensions" )
-import( gpm.LuaPackageExists( "packages/nw3-vars" ) and "packages/nw3-vars" or "https://github.com/Pika-Software/nw3-vars" )
+import( gpm.PackageExists( "packages/glua-extensions" ) and "packages/glua-extensions" or "https://github.com/Pika-Software/glua-extensions" )
+import( gpm.PackageExists( "packages/nw3-vars" ) and "packages/nw3-vars" or "https://github.com/Pika-Software/nw3-vars" )
 
 local packageName = gpm.Package:GetIdentifier()
 local ArgAssert = ArgAssert
