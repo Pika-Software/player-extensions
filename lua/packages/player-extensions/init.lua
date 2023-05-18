@@ -67,9 +67,19 @@ end
 PLAYER.GetName = PLAYER.Nick
 PLAYER.Name = PLAYER.Nick
 
-if SERVER then
+local ENTITY = FindMetaTable( "Entity" )
 
-    local ENTITY = FindMetaTable( "Entity" )
+-- Entity:GetPlayerColor()
+function ENTITY:GetPlayerColor()
+    return self:GetNWVector( "player-color" )
+end
+
+-- Entity:SetPlayerColor( vector )
+function ENTITY:SetPlayerColor( vector )
+    self:SetNWVector( "player-color", vector )
+end
+
+if SERVER then
 
     -- Nickname
     function PLAYER:SetNick( name )
