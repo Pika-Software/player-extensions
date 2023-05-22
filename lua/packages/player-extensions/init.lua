@@ -1,5 +1,5 @@
-import( gpm.PackageExists( "packages/glua-extensions" ) and "packages/glua-extensions" or "https://github.com/Pika-Software/glua-extensions" )
-import( gpm.PackageExists( "packages/nw3-vars" ) and "packages/nw3-vars" or "https://github.com/Pika-Software/nw3-vars" )
+require( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
+require( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
 
 local packageName = gpm.Package:GetIdentifier()
 local ArgAssert = ArgAssert
