@@ -1,16 +1,13 @@
 require( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
-require( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
 
 local packageName = gpm.Package:GetIdentifier()
 local ArgAssert = ArgAssert
-local IsValid = IsValid
+local logger = gpm.Logger
 local hook = hook
 
 if CLIENT then
 
-    local Player = Player
     local select = select
-
     local actions = {
         ["duck-hull-mins"] = function( ply, mins )
             ply:SetHullDuck( mins, select( -1, ply:GetHullDuck() ) )
@@ -32,25 +29,14 @@ if CLIENT then
         end
     }
 
-    local function init( ply )
-        ply:SetNW3VarProxy( function( self, key, value )
-            local func = actions[ key ]
-            if not func then return end
+    hook.Add( "EntityNetworkedVarChanged", packageName, function( ply, key, _, value )
+        if not ply:IsPlayer() then return end
 
-            local ply = self:GetIdentifier()
-            if not IsValid( ply ) then return end
-            func( ply, value )
-        end )
-    end
+        local func = actions[ key ]
+        if not func then return end
+        func( ply, value )
 
-    hook.Add( "PlayerInitialized", packageName, init )
-
-    gameevent.Listen( "player_info" )
-
-    hook.Add( "player_info", packageName, function( data )
-        local ply = Player( data.userid )
-        if not IsValid( ply ) then return end
-        init( ply )
+        logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:SteamID() )
     end )
 
 end
@@ -61,7 +47,7 @@ local PLAYER = FindMetaTable( "Player" )
 PLAYER.SourceNick = PLAYER.SourceNick or PLAYER.Nick
 
 function PLAYER:Nick()
-    return self:GetNW3Var( "name", PLAYER.SourceNick( self ) )
+    return self:GetNW2String( "name", PLAYER.SourceNick( self ) )
 end
 
 PLAYER.GetName = PLAYER.Nick
@@ -71,12 +57,12 @@ local ENTITY = FindMetaTable( "Entity" )
 
 -- Entity:GetPlayerColor()
 function ENTITY:GetPlayerColor()
-    return self:GetNWVector( "player-color" )
+    return self:GetNW2Vector( "player-color" )
 end
 
 -- Entity:SetPlayerColor( vector )
 function ENTITY:SetPlayerColor( vector )
-    self:SetNWVector( "player-color", vector )
+    self:SetNW2Vector( "player-color", vector )
 end
 
 if SERVER then
@@ -84,7 +70,7 @@ if SERVER then
     -- Nickname
     function PLAYER:SetNick( name )
         ArgAssert( name, 1, "string" )
-        self:SetNW3Var( "name", name )
+        self:SetNW2String( "name", name )
     end
 
     -- Map Name
@@ -115,39 +101,39 @@ if SERVER then
 
     -- Player Move
     function PLAYER:SetMoveType( moveType )
-        self:SetNW3Var( "move-type", moveType )
+        self:SetNW2Int( "move-type", moveType )
         ENTITY.SetMoveType( self, moveType )
     end
 
     function PLAYER:SetMoveCollide( moveCollideType )
-        self:SetNW3Var( "move-collide-type", moveCollideType )
+        self:SetNW2Int( "move-collide-type", moveCollideType )
         ENTITY.SetMoveCollide( self, moveCollideType )
     end
 
     -- Players Hulls
-    PLAYER.__SetHullDuck = PLAYER.__SetHullDuck or PLAYER.SetHullDuck
-    PLAYER.__SetHull = PLAYER.__SetHull or PLAYER.SetHull
+    PLAYER.SetHullDuckOnServer = PLAYER.SetHullDuckOnServer or PLAYER.SetHullDuck
+    PLAYER.SetHullOnServer = PLAYER.SetHullOnServer or PLAYER.SetHull
 
     function PLAYER:SetHullDuck( mins, maxs, onlyServer )
         ArgAssert( mins, 1, "Vector" )
         ArgAssert( maxs, 2, "Vector" )
 
-        PLAYER.__SetHullDuck( self, mins, maxs )
+        PLAYER.SetHullDuckOnServer( self, mins, maxs )
         if onlyServer then return end
 
-        self:SetNW3Var( "duck-hull-mins", mins )
-        self:SetNW3Var( "duck-hull-maxs", maxs )
+        self:SetNW2Vector( "duck-hull-mins", mins )
+        self:SetNW2Vector( "duck-hull-maxs", maxs )
     end
 
     function PLAYER:SetHull( mins, maxs, onlyServer )
         ArgAssert( mins, 1, "Vector" )
         ArgAssert( maxs, 2, "Vector" )
 
-        PLAYER.__SetHull( self, mins, maxs )
+        PLAYER.SetHullOnServer( self, mins, maxs )
         if onlyServer then return end
 
-        self:SetNW3Var( "hull-mins", mins )
-        self:SetNW3Var( "hull-maxs", maxs )
+        self:SetNW2Vector( "hull-mins", mins )
+        self:SetNW2Vector( "hull-maxs", maxs )
     end
 
 end
