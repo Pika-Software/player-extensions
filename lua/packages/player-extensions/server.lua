@@ -11,6 +11,16 @@ local hook = hook
 local PLAYER = FindMetaTable( "Player" )
 local ENTITY = FindMetaTable( "Entity" )
 
+function ENTITY:SetCreator( ply )
+    ArgAssert( ply, 1, "Entity" )
+    if not ply:IsPlayer() or ply:IsBot() then
+        self:SetNW2String( "entity-owner", "e" .. ent:EntIndex() )
+        return
+    end
+
+    self:SetNW2String( "entity-owner", ply:SteamID() )
+end
+
 -- Nickname
 function PLAYER:SetNick( name )
     ArgAssert( name, 1, "string" )

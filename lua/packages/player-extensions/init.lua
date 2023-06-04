@@ -82,6 +82,35 @@ function ENTITY:SetPlayerColor( vector )
     self:SetNW2Vector( "player-color", vector )
 end
 
+-- Entity:GetCreator()
+do
+
+    local player_GetBySteamID = player.GetBySteamID
+    local string_sub = string.sub
+    local tonumber = tonumber
+    local Entity = Entity
+    local NULL = NULL
+
+    function ENTITY:GetCreator()
+        local id = self:GetNW2String( "entity-owner", false )
+        if not id then
+            return NULL
+        end
+
+        if string_sub( id, 1, 1 ) == "e" then
+            local index = tonumber( string_sub( id, 2, #id ) )
+            if not index then
+                return NULL
+            end
+
+            return Entity( index )
+        end
+
+        return player_GetBySteamID( id )
+    end
+
+end
+
 if SERVER then
     include( "server.lua" )
 end
