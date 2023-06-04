@@ -1,9 +1,9 @@
+
 install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
+install( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
 
 local packageName = gpm.Package:GetIdentifier()
-local ArgAssert = ArgAssert
 local logger = gpm.Logger
-local hook = hook
 
 if CLIENT then
 
@@ -53,6 +53,23 @@ end
 PLAYER.GetName = PLAYER.Nick
 PLAYER.Name = PLAYER.Nick
 
+-- Player:TimeConnected()
+do
+
+    local SysTime = SysTime
+
+    function PLAYER:TimeConnected()
+        local time = SysTime()
+        return time - self:GetNW3Var( "time-connected", time )
+    end
+
+end
+
+-- Player:TimePlayed()
+function PLAYER:TimePlayed()
+    return PLAYER.TimeConnected( self ) + self:GetNW3Var( "time-played", 0 )
+end
+
 local ENTITY = FindMetaTable( "Entity" )
 
 -- Entity:GetPlayerColor()
@@ -66,74 +83,5 @@ function ENTITY:SetPlayerColor( vector )
 end
 
 if SERVER then
-
-    -- Nickname
-    function PLAYER:SetNick( name )
-        ArgAssert( name, 1, "string" )
-        self:SetNW2String( "name", name )
-    end
-
-    -- Map Name
-    PLAYER.GetMapName = ENTITY.GetName
-
-    -- Player Model
-    do
-
-        local util_IsValidModel = util.IsValidModel
-        local assert = assert
-
-        function PLAYER:SetModel( model )
-            ArgAssert( model, 1, "string" )
-            assert( util_IsValidModel( model ), "Model must be valid!" )
-
-            local result = hook.Run( "OnPlayerModelChange", self, model )
-            if result == false then
-                model = self:GetModel()
-            elseif type( result ) == "string" then
-                model = result
-            end
-
-            ENTITY.SetModel( self, model )
-            hook.Run( "PlayerModelChanged", self, model )
-        end
-
-    end
-
-    -- Player Move
-    function PLAYER:SetMoveType( moveType )
-        self:SetNW2Int( "move-type", moveType )
-        ENTITY.SetMoveType( self, moveType )
-    end
-
-    function PLAYER:SetMoveCollide( moveCollideType )
-        self:SetNW2Int( "move-collide-type", moveCollideType )
-        ENTITY.SetMoveCollide( self, moveCollideType )
-    end
-
-    -- Players Hulls
-    PLAYER.SetHullDuckOnServer = PLAYER.SetHullDuckOnServer or PLAYER.SetHullDuck
-    PLAYER.SetHullOnServer = PLAYER.SetHullOnServer or PLAYER.SetHull
-
-    function PLAYER:SetHullDuck( mins, maxs, onlyServer )
-        ArgAssert( mins, 1, "Vector" )
-        ArgAssert( maxs, 2, "Vector" )
-
-        PLAYER.SetHullDuckOnServer( self, mins, maxs )
-        if onlyServer then return end
-
-        self:SetNW2Vector( "duck-hull-mins", mins )
-        self:SetNW2Vector( "duck-hull-maxs", maxs )
-    end
-
-    function PLAYER:SetHull( mins, maxs, onlyServer )
-        ArgAssert( mins, 1, "Vector" )
-        ArgAssert( maxs, 2, "Vector" )
-
-        PLAYER.SetHullOnServer( self, mins, maxs )
-        if onlyServer then return end
-
-        self:SetNW2Vector( "hull-mins", mins )
-        self:SetNW2Vector( "hull-maxs", maxs )
-    end
-
+    include( "server.lua" )
 end
