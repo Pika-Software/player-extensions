@@ -80,18 +80,18 @@ function PLAYER:SetHull( mins, maxs, onlyServer )
     self:SetNW2Vector( "hull-maxs", maxs )
 end
 
-local data = sqlt.Create( "time-played" )
+local db = sqlt.Create( "time-played" )
 
 function PLAYER:SetTimePlayed( float )
     self:SetNW3Var( "time-played", float )
     if self:IsBot() then return end
-    data:Set( self:SteamID(), float )
+    db:Set( self:SteamID(), float )
 end
 
 hook.Add( "PlayerInitialSpawn", packageName, function( ply )
     ply:SetNW3Var( "time-connected", SysTime() )
     if ply:IsBot() then return end
-    ply:SetNW3Var( "time-played", data:Get( ply:SteamID(), 0 ) )
+    ply:SetNW3Var( "time-played", db:Get( ply:SteamID(), 0 ) )
 end )
 
 hook.Add( "PlayerInitialized", packageName, function( ply )
@@ -102,7 +102,7 @@ local shutdown = false
 
 hook.Add( "ShutDown", packageName, function()
     for _, ply in ipairs( player_GetHumans() ) do
-        data:Set( ply:SteamID(), ply:TimePlayed(), true )
+        db:Set( ply:SteamID(), ply:TimePlayed(), true )
     end
 
     shutdown = true
@@ -110,5 +110,5 @@ end )
 
 hook.Add( "PlayerDisconnected", packageName, function( ply )
     if shutdown or ply:IsBot() then return end
-    data:Set( ply:SteamID(), ply:TimePlayed(), true )
+    db:Set( ply:SteamID(), ply:TimePlayed(), true )
 end )
