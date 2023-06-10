@@ -47,7 +47,8 @@ local PLAYER = FindMetaTable( "Player" )
 PLAYER.SourceNick = PLAYER.SourceNick or PLAYER.Nick
 
 function PLAYER:Nick()
-    return self:GetNW2String( "name", PLAYER.SourceNick( self ) )
+    local sourceNick = PLAYER.SourceNick( self )
+    return self:GetNW2String( "nickname", #sourceNick == 0 and "unknown player" or sourceNick )
 end
 
 PLAYER.GetName = PLAYER.Nick

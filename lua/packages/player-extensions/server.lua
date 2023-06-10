@@ -22,9 +22,9 @@ function ENTITY:SetCreator( ply )
 end
 
 -- Nickname
-function PLAYER:SetNick( name )
-    ArgAssert( name, 1, "string" )
-    self:SetNW2String( "name", name )
+function PLAYER:SetNick( nickname )
+    ArgAssert( nickname, 1, "string" )
+    self:SetNW2String( "nickname", nickname )
 end
 
 -- Map Name
