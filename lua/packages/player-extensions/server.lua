@@ -1,7 +1,6 @@
 
 install( "packages/sql-tables", "https://github.com/Pika-Software/sql-tables" )
 
-local packageName = gpm.Package:GetIdentifier()
 local player_GetHumans = player.GetHumans
 local ArgAssert = ArgAssert
 local ipairs = ipairs
@@ -98,19 +97,19 @@ function PLAYER:SetTimePlayed( float )
     db:Set( self:SteamID(), float )
 end
 
-hook.Add( "PlayerInitialSpawn", packageName, function( ply )
+hook.Add( "PlayerInitialSpawn", "PlayerTime", function( ply )
     ply:SetNW3Var( "time-connected", SysTime() )
     if ply:IsBot() then return end
     ply:SetNW3Var( "time-played", db:Get( ply:SteamID(), 0 ) )
 end )
 
-hook.Add( "PlayerInitialized", packageName, function( ply )
+hook.Add( "PlayerInitialized", "PlayerTime", function( ply )
     ply:SetNW3Var( "time-connected", SysTime() )
 end )
 
 local shutdown = false
 
-hook.Add( "ShutDown", packageName, function()
+hook.Add( "ShutDown", "PlayerTime", function()
     for _, ply in ipairs( player_GetHumans() ) do
         db:Set( ply:SteamID(), ply:TimePlayed(), true )
     end
@@ -118,7 +117,7 @@ hook.Add( "ShutDown", packageName, function()
     shutdown = true
 end )
 
-hook.Add( "PlayerDisconnected", packageName, function( ply )
+hook.Add( "PlayerDisconnected", "PlayerTime", function( ply )
     if shutdown or ply:IsBot() then return end
     db:Set( ply:SteamID(), ply:TimePlayed(), true )
 end )

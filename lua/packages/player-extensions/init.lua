@@ -1,9 +1,5 @@
-
 install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
 install( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
-
-local packageName = gpm.Package:GetIdentifier()
-local logger = gpm.Logger
 
 if CLIENT then
 
@@ -29,14 +25,14 @@ if CLIENT then
         end
     }
 
-    hook.Add( "EntityNetworkedVarChanged", packageName, function( ply, key, _, value )
+    hook.Add( "EntityNetworkedVarChanged", "Synchronization", function( ply, key, _, value )
         if not ply:IsPlayer() then return end
 
         local func = actions[ key ]
         if not func then return end
         func( ply, value )
 
-        logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:SteamID() )
+        gpm.Logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:SteamID() )
     end )
 
 end

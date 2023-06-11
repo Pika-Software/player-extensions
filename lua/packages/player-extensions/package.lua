@@ -1,5 +1,4 @@
 name = "player-extensions"
-main = "init.lua"
-version = 010300
+version = 010400
 autorun = true
 logger = true
