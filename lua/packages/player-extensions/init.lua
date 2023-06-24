@@ -14,7 +14,7 @@ local ENTITY = FindMetaTable( "Entity" )
 function ENTITY:SetCreator( ply )
     ArgAssert( ply, 1, "Entity" )
     if not ply:IsPlayer() or ply:IsBot() then
-        self:SetNW2String( "entity-owner", "e" .. ent:EntIndex() )
+        self:SetNW2String( "entity-owner", "e" .. ply:EntIndex() )
         return
     end
 
