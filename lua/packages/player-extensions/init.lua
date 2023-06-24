@@ -1,113 +1,125 @@
-install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
-install( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
+install( "packages/sql-tables", "https://github.com/Pika-Software/sql-tables" )
+AddCSLuaFile( "shared.lua" )
+include( "shared.lua" )
 
-if CLIENT then
+local player_GetHumans = player.GetHumans
+local ArgAssert = ArgAssert
+local ipairs = ipairs
+local sqlt = sqlt
+local hook = hook
 
-    local select = select
-    local actions = {
-        ["duck-hull-mins"] = function( ply, mins )
-            ply:SetHullDuck( mins, select( -1, ply:GetHullDuck() ) )
-        end,
-        ["duck-hull-maxs"] = function( ply, maxs )
-            ply:SetHullDuck( ply:GetHullDuck(), maxs )
-        end,
-        ["hull-mins"] = function( ply, mins )
-            ply:SetHull( mins, select( -1, ply:GetHull() ) )
-        end,
-        ["hull-maxs"] = function( ply, maxs )
-            ply:SetHull( ply:GetHull(), maxs )
-        end,
-        ["move-type"] = function( ply, moveType )
-            ply:SetMoveType( moveType )
-        end,
-        ["move-collide-type"] = function( ply, moveCollideType )
-            ply:SetMoveCollide( moveCollideType )
-        end
-    }
+local ENTITY = FindMetaTable( "Entity" )
 
-    hook.Add( "EntityNetworkedVarChanged", "Synchronization", function( ply, key, _, value )
-        if not ply:IsPlayer() then return end
+function ENTITY:SetCreator( ply )
+    ArgAssert( ply, 1, "Entity" )
+    if not ply:IsPlayer() or ply:IsBot() then
+        self:SetNW2String( "entity-owner", "e" .. ent:EntIndex() )
+        return
+    end
 
-        local func = actions[ key ]
-        if not func then return end
-        func( ply, value )
-
-        gpm.Logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:SteamID() )
-    end )
-
+    self:SetNW2String( "entity-owner", ply:SteamID64() )
 end
 
 local PLAYER = FindMetaTable( "Player" )
 
 -- Nickname
-PLAYER.SourceNick = PLAYER.SourceNick or PLAYER.Nick
-
-function PLAYER:Nick()
-    local sourceNick = PLAYER.SourceNick( self )
-    return self:GetNW2String( "nickname", #sourceNick == 0 and "unknown player" or sourceNick )
+function PLAYER:SetNick( nickname )
+    ArgAssert( nickname, 1, "string" )
+    self:SetNW2String( "nickname", nickname )
 end
 
-PLAYER.GetName = PLAYER.Nick
-PLAYER.Name = PLAYER.Nick
+-- Map Name
+PLAYER.GetMapName = ENTITY.GetName
 
--- Player:TimeConnected()
+-- Player Model
 do
 
-    local SysTime = SysTime
+    local util_IsValidModel = util.IsValidModel
+    local assert = assert
 
-    function PLAYER:TimeConnected()
-        local time = SysTime()
-        return time - self:GetNW3Var( "time-connected", time )
+    function PLAYER:SetModel( model )
+        ArgAssert( model, 1, "string" )
+        assert( util_IsValidModel( model ), "Model must be valid!" )
+
+        local result = hook.Run( "OnPlayerModelChange", self, model )
+        if result == false then
+            model = self:GetModel()
+        elseif type( result ) == "string" then
+            model = result
+        end
+
+        ENTITY.SetModel( self, model )
+        hook.Run( "PlayerModelChanged", self, model )
     end
 
 end
 
--- Player:TimePlayed()
-function PLAYER:TimePlayed()
-    return PLAYER.TimeConnected( self ) + self:GetNW3Var( "time-played", 0 )
+-- Player Move
+function PLAYER:SetMoveType( moveType )
+    self:SetNW2Int( "move-type", moveType )
+    ENTITY.SetMoveType( self, moveType )
 end
 
-local ENTITY = FindMetaTable( "Entity" )
-
--- Entity:GetPlayerColor()
-function ENTITY:GetPlayerColor()
-    return self:GetNW2Vector( "player-color" )
+function PLAYER:SetMoveCollide( moveCollideType )
+    self:SetNW2Int( "move-collide-type", moveCollideType )
+    ENTITY.SetMoveCollide( self, moveCollideType )
 end
 
--- Entity:SetPlayerColor( vector )
-function ENTITY:SetPlayerColor( vector )
-    self:SetNW2Vector( "player-color", vector )
+-- Players Hulls
+PLAYER.SetHullDuckOnServer = PLAYER.SetHullDuckOnServer or PLAYER.SetHullDuck
+PLAYER.SetHullOnServer = PLAYER.SetHullOnServer or PLAYER.SetHull
+
+function PLAYER:SetHullDuck( mins, maxs, onlyServer )
+    ArgAssert( mins, 1, "Vector" )
+    ArgAssert( maxs, 2, "Vector" )
+
+    PLAYER.SetHullDuckOnServer( self, mins, maxs )
+    if onlyServer then return end
+
+    self:SetNW2Vector( "duck-hull-mins", mins )
+    self:SetNW2Vector( "duck-hull-maxs", maxs )
 end
 
--- Entity:GetCreator()
-do
+function PLAYER:SetHull( mins, maxs, onlyServer )
+    ArgAssert( mins, 1, "Vector" )
+    ArgAssert( maxs, 2, "Vector" )
 
-    local player_GetBySteamID = player.GetBySteamID
-    local string_sub = string.sub
-    local tonumber = tonumber
-    local Entity = Entity
-    local NULL = NULL
+    PLAYER.SetHullOnServer( self, mins, maxs )
+    if onlyServer then return end
 
-    function ENTITY:GetCreator()
-        local id = self:GetNW2String( "entity-owner", false )
-        if not id then
-            return NULL
-        end
+    self:SetNW2Vector( "hull-mins", mins )
+    self:SetNW2Vector( "hull-maxs", maxs )
+end
 
-        if string_sub( id, 1, 1 ) == "e" then
-            local index = tonumber( string_sub( id, 2, #id ) )
-            if not index then
-                return NULL
-            end
+local db = sqlt.Create( "time-played" )
 
-            return Entity( index )
-        end
+function PLAYER:SetTimePlayed( float )
+    self:SetNW3Var( "time-played", float )
+    if self:IsBot() then return end
+    db:Set( self:SteamID64(), float )
+end
 
-        return player_GetBySteamID( id )
+hook.Add( "PlayerInitialSpawn", "PlayerTime", function( ply )
+    ply:SetNW3Var( "time-connected", SysTime() )
+    if ply:IsBot() then return end
+    ply:SetNW3Var( "time-played", db:Get( ply:SteamID64(), 0 ) )
+end )
+
+hook.Add( "PlayerInitialized", "PlayerTime", function( ply )
+    ply:SetNW3Var( "time-connected", SysTime() )
+end )
+
+local shutdown = false
+
+hook.Add( "ShutDown", "PlayerTime", function()
+    for _, ply in ipairs( player_GetHumans() ) do
+        db:Set( ply:SteamID64(), ply:TimePlayed(), true )
     end
 
-end
+    shutdown = true
+end )
 
-if SERVER then
-    include( "server.lua" )
-end
+hook.Add( "PlayerDisconnected", "PlayerTime", function( ply )
+    if shutdown or ply:IsBot() then return end
+    db:Set( ply:SteamID64(), ply:TimePlayed(), true )
+end )
