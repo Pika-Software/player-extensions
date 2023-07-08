@@ -31,5 +31,5 @@ hook.Add( "EntityNetworkedVarChanged", "Synchronization", function( ply, key, _,
     if not func then return end
     func( ply, value )
 
-    logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:SteamID64() )
+    logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:IsBot() and "BOT" or ply:SteamID64() )
 end )
