@@ -1,6 +1,4 @@
-AddCSLuaFile( "shared.lua" )
 include( "shared.lua" )
-
 install( "packages/sql-tables", "https://github.com/Pika-Software/sql-tables" )
 
 local player_GetHumans = player.GetHumans
