@@ -1,5 +1,5 @@
 name = "player-extensions"
-version = 010503
+version = 010600
 autorun = true
 init = {
     ["client"] = "cl_init.lua",

@@ -5,6 +5,7 @@ install( "packages/sql-tables", "https://github.com/Pika-Software/sql-tables" )
 
 local player_GetHumans = player.GetHumans
 local ArgAssert = ArgAssert
+local SysTime = SysTime
 local ipairs = ipairs
 local sqlt = sqlt
 local hook = hook
@@ -13,12 +14,8 @@ local ENTITY = FindMetaTable( "Entity" )
 
 function ENTITY:SetCreator( ply )
     ArgAssert( ply, 1, "Entity" )
-    if not ply:IsPlayer() or ply:IsBot() then
-        self:SetNW2String( "entity-owner", "e" .. ply:EntIndex() )
-        return
-    end
-
-    self:SetNW2String( "entity-owner", ply:SteamID64() )
+    if not ply:IsPlayer() then return end
+    self:SetNW2String( "entity-owner", ply:UniqueID2() )
 end
 
 local PLAYER = FindMetaTable( "Player" )
@@ -96,31 +93,37 @@ local db = sqlt.Create( "time-played" )
 
 function PLAYER:SetTimePlayed( float )
     self:SetNW3Var( "time-played", float )
-    if self:IsBot() then return end
-    db:Set( self:SteamID64(), float )
+    db:Set( self:UniqueID2(), float )
 end
 
-hook.Add( "PlayerInitialSpawn", "PlayerTime", function( ply )
-    ply:SetNW3Var( "time-connected", SysTime() )
-    if ply:IsBot() then return end
-    ply:SetNW3Var( "time-played", db:Get( ply:SteamID64(), 0 ) )
-end )
+function PLAYER:SaveTimePlayed()
+    db:Set( self:UniqueID2(), self:TimePlayed(), true )
+end
+
+function PLAYER:LoadTimePlayed()
+    self:SetNW3Var( "time-played", db:Get( self:UniqueID2(), 0 ) )
+end
+
+function PLAYER:ResetTimeConnected()
+    self:SetNW3Var( "time-connected", SysTime() )
+end
 
 hook.Add( "PlayerInitialized", "PlayerTime", function( ply )
-    ply:SetNW3Var( "time-connected", SysTime() )
+    ply:ResetTimeConnected()
+    ply:LoadTimePlayed()
 end )
 
 local shutdown = false
 
 hook.Add( "ShutDown", "PlayerTime", function()
     for _, ply in ipairs( player_GetHumans() ) do
-        db:Set( ply:SteamID64(), ply:TimePlayed(), true )
+        ply:SaveTimePlayed()
     end
 
     shutdown = true
 end )
 
 hook.Add( "PlayerDisconnected", "PlayerTime", function( ply )
-    if shutdown or ply:IsBot() then return end
-    db:Set( ply:SteamID64(), ply:TimePlayed(), true )
+    if shutdown then return end
+    ply:SaveTimePlayed()
 end )
