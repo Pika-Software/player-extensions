@@ -55,7 +55,7 @@ do
         local player_GetByUniqueID2 = player.GetByUniqueID2
 
         function ENTITY:GetCreator()
-            local uid = self:GetNW2String( "entity-owner", false )
+            local uid = self:GetNW2String( "entity-owner" )
             if not uid then return end
             return player_GetByUniqueID2( uid )
         end
