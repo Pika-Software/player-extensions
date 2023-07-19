@@ -10,7 +10,7 @@ do
 
     function PLAYER:Nick()
         local sourceNick = PLAYER.SourceNick( self )
-        return self:GetNW2String( "nickname", #sourceNick == 0 and "unknown player" or sourceNick )
+        return self:GetNW2Var( "nickname", #sourceNick == 0 and "unknown player" or sourceNick )
     end
 
     PLAYER.GetName = PLAYER.Nick
@@ -41,12 +41,12 @@ do
 
     -- Entity:GetPlayerColor()
     function ENTITY:GetPlayerColor()
-        return self:GetNW2Vector( "player-color" )
+        return self:GetNW2Var( "player-color" )
     end
 
     -- Entity:SetPlayerColor( vector )
     function ENTITY:SetPlayerColor( vector )
-        self:SetNW2Vector( "player-color", vector )
+        self:SetNW2Var( "player-color", vector )
     end
 
     -- Entity:GetCreator()
@@ -55,7 +55,7 @@ do
         local player_GetByUniqueID2 = player.GetByUniqueID2
 
         function ENTITY:GetCreator()
-            local uid = self:GetNW2String( "entity-owner" )
+            local uid = self:GetNW2Var( "entity-owner" )
             if not uid then return end
             return player_GetByUniqueID2( uid )
         end

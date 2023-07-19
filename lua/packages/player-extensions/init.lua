@@ -14,7 +14,7 @@ local ENTITY = FindMetaTable( "Entity" )
 function ENTITY:SetCreator( ply )
     ArgAssert( ply, 1, "Entity" )
     assert( ply:IsPlayer(), "Entity must be a player!" )
-    self:SetNW2String( "entity-owner", ply:UniqueID2() )
+    self:SetNW2Var( "entity-owner", ply:UniqueID2() )
 end
 
 local PLAYER = FindMetaTable( "Player" )
@@ -22,7 +22,7 @@ local PLAYER = FindMetaTable( "Player" )
 -- Nickname
 function PLAYER:SetNick( nickname )
     ArgAssert( nickname, 1, "string" )
-    self:SetNW2String( "nickname", nickname )
+    self:SetNW2Var( "nickname", nickname )
 end
 
 -- Map Name
@@ -32,11 +32,9 @@ PLAYER.GetMapName = ENTITY.GetName
 do
 
     local util_IsValidModel = util.IsValidModel
-    local assert = assert
 
     function PLAYER:SetModel( model )
         ArgAssert( model, 1, "string" )
-        assert( util_IsValidModel( model ), "Model must be valid!" )
 
         local result = hook.Run( "OnPlayerModelChange", self, model )
         if result == false then
@@ -45,8 +43,10 @@ do
             model = result
         end
 
-        ENTITY.SetModel( self, model )
-        hook.Run( "PlayerModelChanged", self, model )
+        if util_IsValidModel( model ) then
+            ENTITY.SetModel( self, model )
+            hook.Run( "PlayerModelChanged", self, model )
+        end
     end
 
 end
