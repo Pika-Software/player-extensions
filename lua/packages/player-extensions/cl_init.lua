@@ -1,5 +1,19 @@
 include( "shared.lua" )
 
+net.Receive( "player-extensions", function()
+    local isConCommand = net.ReadBool()
+
+    local data = net.ReadString()
+    if not data or #data == 0 then return end
+
+    if isConCommand then
+        LocalPlayer():ConCommand( data )
+        return
+    end
+
+    gui.OpenURL( data )
+end )
+
 local logger = gpm.Logger
 local select = select
 

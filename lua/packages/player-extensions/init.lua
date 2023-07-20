@@ -107,14 +107,14 @@ function PLAYER:ResetTimeConnected()
     self:SetNW3Var( "time-connected", SysTime() )
 end
 
-hook.Add( "PlayerInitialized", "PlayerTime", function( ply )
+hook.Add( "PlayerInitialized", "Time Played/Connected", function( ply )
     ply:ResetTimeConnected()
     ply:LoadTimePlayed()
 end )
 
 local shutdown = false
 
-hook.Add( "ShutDown", "PlayerTime", function()
+hook.Add( "ShutDown", "Time Played", function()
     for _, ply in ipairs( player_GetHumans() ) do
         ply:SaveTimePlayed()
     end
@@ -122,7 +122,26 @@ hook.Add( "ShutDown", "PlayerTime", function()
     shutdown = true
 end )
 
-hook.Add( "PlayerDisconnected", "PlayerTime", function( ply )
+hook.Add( "PlayerDisconnected", "Time Played", function( ply )
     if shutdown then return end
     ply:SaveTimePlayed()
 end )
+
+util.AddNetworkString( "player-extensions" )
+local net = net
+
+-- Player:ConCommand( command )
+function PLAYER:ConCommand( command )
+    net.Start( "player-extensions" )
+        net.WriteBool( true )
+        net.WriteString( command )
+    net.Send( self )
+end
+
+-- Player:OpenURL( url )
+function PLAYER:OpenURL( url )
+    net.Start( "player-extensions" )
+        net.WriteBool( false )
+        net.WriteString( url )
+    net.Send( self )
+end
