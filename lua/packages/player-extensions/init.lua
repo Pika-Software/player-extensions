@@ -1,5 +1,7 @@
-include( "shared.lua" )
+install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
 install( "packages/sql-tables", "https://github.com/Pika-Software/sql-tables" )
+install( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
+include( "shared.lua" )
 
 local player_GetHumans = player.GetHumans
 local ArgAssert = ArgAssert

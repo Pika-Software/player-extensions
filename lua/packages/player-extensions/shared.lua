@@ -1,6 +1,3 @@
-install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
-install( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
-
 do
 
     local PLAYER = FindMetaTable( "Player" )
