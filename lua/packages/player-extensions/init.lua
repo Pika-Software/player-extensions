@@ -147,3 +147,20 @@ function PLAYER:OpenURL( url )
         net.WriteString( url )
     net.Send( self )
 end
+
+-- Player:GetIPAddress()
+do
+
+    local game_GetIPAddress = game.GetIPAddress
+    local string_Split = string.Split
+
+    function PLAYER:GetIPAddress()
+        local ip = self:IPAddress()
+        if ip == "loopback" then
+            ip = string_Split( game_GetIPAddress(), ":" )[ 1 ]
+        end
+
+        return ip
+    end
+
+end
