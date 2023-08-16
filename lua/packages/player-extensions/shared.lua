@@ -37,14 +37,8 @@ do
     local ENTITY = FindMetaTable( "Entity" )
 
     -- Entity:GetPlayerColor()
-    do
-
-        local default = Vector( 1, 1, 1 )
-
-        function ENTITY:GetPlayerColor()
-            return self:GetNW2Var( "player-color", default )
-        end
-
+    function ENTITY:GetPlayerColor()
+        return self:GetNW2Var( "player-color" )
     end
 
     -- Entity:SetPlayerColor( vector )
