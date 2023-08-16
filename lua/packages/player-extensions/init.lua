@@ -1,6 +1,4 @@
-install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
-install( "packages/sql-tables", "https://github.com/Pika-Software/sql-tables" )
-install( "packages/nw3-vars", "https://github.com/Pika-Software/nw3-vars" )
+install( "packages/sql-tables.lua", "https://raw.githubusercontent.com/Pika-Software/sql-tables/main/lua/packages/sql-tables.lua" )
 include( "shared.lua" )
 
 local player_GetHumans = player.GetHumans
