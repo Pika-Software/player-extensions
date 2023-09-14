@@ -1,6 +1,8 @@
 install( "packages/nw3-vars.lua", "https://raw.githubusercontent.com/Pika-Software/nw3-vars/main/lua/packages/nw3-vars.lua" )
 install( "packages/glua-extensions", "https://github.com/Pika-Software/glua-extensions" )
 
+local ENTITY = FindMetaTable( "Entity" )
+
 do
 
     local PLAYER = FindMetaTable( "Player" )
@@ -10,7 +12,7 @@ do
 
     function PLAYER:Nick()
         local sourceNick = PLAYER.SourceNick( self )
-        return self:GetNW2Var( "nickname", #sourceNick == 0 and "unknown player" or sourceNick )
+        return ENTITY.GetNW2Var( self, "nickname", #sourceNick == 0 and "unknown player" or sourceNick )
     end
 
     PLAYER.GetName = PLAYER.Nick
@@ -23,43 +25,41 @@ do
 
         function PLAYER:TimeConnected()
             local time = SysTime()
-            return time - self:GetNW3Var( "time-connected", time )
+            return time - ENTITY.GetNW3Var( self, "time-connected", time )
         end
 
     end
 
     -- Player:TimePlayed()
     function PLAYER:TimePlayed()
-        return PLAYER.TimeConnected( self ) + self:GetNW3Var( "time-played", 0 )
+        return PLAYER.TimeConnected( self ) + ENTITY.GetNW3Var( self, "time-played", 0 )
     end
 
 end
 
+-- Entity:GetPlayerColor()
+function ENTITY:GetPlayerColor()
+    return ENTITY.GetNW2Var( self, "player-color" )
+end
+
+-- Entity:SetPlayerColor( vector )
+function ENTITY:SetPlayerColor( vector )
+    ENTITY.SetNW2Var( self, "player-color", vector )
+end
+
+-- Entity:GetCreator()
 do
 
-    local ENTITY = FindMetaTable( "Entity" )
+    local player_GetByUniqueID2 = player.GetByUniqueID2
+    local NULL = NULL
 
-    -- Entity:GetPlayerColor()
-    function ENTITY:GetPlayerColor()
-        return self:GetNW2Var( "player-color" )
-    end
+    function ENTITY:GetCreator()
+        local uid = ENTITY.GetNW2Var( self, "entity-owner" )
+        if not uid then return NULL end
 
-    -- Entity:SetPlayerColor( vector )
-    function ENTITY:SetPlayerColor( vector )
-        self:SetNW2Var( "player-color", vector )
-    end
-
-    -- Entity:GetCreator()
-    do
-
-        local player_GetByUniqueID2 = player.GetByUniqueID2
-
-        function ENTITY:GetCreator()
-            local uid = self:GetNW2Var( "entity-owner" )
-            if not uid then return end
-            return player_GetByUniqueID2( uid )
-        end
-
+        local ply = player_GetByUniqueID2( uid )
+        if not ply then return NULL end
+        return ply
     end
 
 end

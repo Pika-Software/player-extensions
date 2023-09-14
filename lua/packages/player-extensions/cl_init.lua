@@ -48,7 +48,7 @@ hook.Add( "EntityNetworkedVarChanged", "Synchronization", function( ply, key, _,
     logger:Debug( "Key '%s' is synchronized with '%s (%s)'", key, ply:Nick(), ply:IsBot() and "BOT" or ply:SteamID64() )
 end )
 
-local function sync( ply )
+ClientInitialized( function( ply )
     for key, func in pairs( actions ) do
         local value = ply:GetNW2Var( key )
         if not value then continue end
@@ -56,12 +56,4 @@ local function sync( ply )
 
         logger:Debug( "Local player key '%s' is synchronized.", key )
     end
-end
-
-local ply = LocalPlayer()
-if IsValid( ply ) then
-    sync( ply )
-    return
-end
-
-hook.Add( "PlayerInitialized", "Synchronization", sync )
+end )
