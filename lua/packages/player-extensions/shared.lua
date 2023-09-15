@@ -38,8 +38,11 @@ do
 end
 
 -- Entity:GetPlayerColor()
-function ENTITY:GetPlayerColor()
-    return ENTITY.GetNW2Var( self, "player-color" )
+do
+    local defaultColor = Vector( 0.25, 0.35, 0.4 )
+    function ENTITY:GetPlayerColor()
+        return ENTITY.GetNW2Var( self, "player-color", defaultColor )
+    end
 end
 
 -- Entity:SetPlayerColor( vector )

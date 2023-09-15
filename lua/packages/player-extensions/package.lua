@@ -1,5 +1,5 @@
 name = "player-extensions"
-version = "1.12.0"
+version = "1.12.1"
 autorun = true
 
 init = {
