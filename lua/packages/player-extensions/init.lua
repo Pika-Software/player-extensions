@@ -5,16 +5,15 @@ local player_GetHumans = player.GetHumans
 local ArgAssert = ArgAssert
 local SysTime = SysTime
 local ipairs = ipairs
-local assert = assert
+-- local assert = assert
 local sqlt = sqlt
 local hook = hook
 
 local ENTITY = FindMetaTable( "Entity" )
 
-function ENTITY:SetCreator( ply )
-    ArgAssert( ply, 1, "Entity" )
-    assert( ply:IsPlayer(), "Entity must be a player!" )
-    self:SetNW2Var( "entity-owner", ply:UniqueID2() )
+function ENTITY:SetCreator( entity )
+    ArgAssert( entity, 1, "Entity" )
+    self:SetNW2Entity( "entity-owner", entity )
 end
 
 local PLAYER = FindMetaTable( "Player" )

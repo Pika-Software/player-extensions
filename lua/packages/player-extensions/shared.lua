@@ -52,17 +52,8 @@ end
 
 -- Entity:GetCreator()
 do
-
-    local player_GetByUniqueID2 = player.GetByUniqueID2
     local NULL = NULL
-
     function ENTITY:GetCreator()
-        local uid = ENTITY.GetNW2Var( self, "entity-owner" )
-        if not uid then return NULL end
-
-        local ply = player_GetByUniqueID2( uid )
-        if not ply then return NULL end
-        return ply
+        return self:GetNW2Entity( "entity-owner", NULL )
     end
-
 end
